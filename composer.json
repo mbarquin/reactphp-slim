@@ -1,0 +1,15 @@
+{
+    "name": "mbarquin/reactphp-slim",
+    "description": "Slim Request and Response extended to allow reactPHP serve a Slim framework instance",
+    "require": {
+        "php": "^7.0",
+        "react/http": "0.3.*",
+        "slim/slim": "^3.1"
+    },
+    "config": {
+        "vendor-dir": "src/vendor"
+    },
+    "autoload": {
+        "psr-4": { "mbarquin\\reactSlim\\": "src/" }
+    }
+}
