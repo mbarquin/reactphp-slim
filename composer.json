@@ -1,6 +1,7 @@
 {
     "name": "mbarquin/reactphp-slim",
     "description": "Slim Request and Response extended to allow reactPHP serve a Slim framework instance",
+    "license" : "MIT",
     "require": {
         "php": "^7.0",
         "react/http": "0.3.*",
