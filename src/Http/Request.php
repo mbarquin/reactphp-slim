@@ -5,8 +5,6 @@ use Slim\Http\Headers;
 use Slim\Http\Uri;
 use Slim\Http\RequestBody;
 
-use React\Http\Request;
-
 class Request extends \Slim\Http\Request
 {
     static public function createFromReactRequest(\React\Http\Request $request)

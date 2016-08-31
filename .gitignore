@@ -1,6 +1,6 @@
 /nbproject/
 **/nbproject/**
 /composer.lock
-/src/vendor/*
+/src/vendor/**
 /build/phpUnit/**
 !.gitignore
