@@ -6,7 +6,7 @@ Introduction
 
 This library is created in order to use reactPHP as a HTTP server for Slim framework, I have extended Slim request and response objects to implement functions which allows us to transfer data from native reactPHP objects into Slim objects. With this we will be able to create a basic react server for Slim framework.
 
-Now working in a new way to setup the reactPHP server and run the Slim Application, please use v0.4.2 release (doc bellow), this version is not finished yet, I'm testing it.
+Now working on a new way to setup the reactPHP server and run the Slim Application, please use v0.4.2 release (doc bellow), this version is not finished yet, I'm testing it.
 
 
 ```php
