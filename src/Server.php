@@ -1,9 +1,29 @@
 <?php
+/**
+ * Server launcher class file. It makes the setup of the reactPHP server
+ *
+ * (c) Moisés Barquín <moises.barquin@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * PHP version 7.0
+ *
+ * @package    reactSlim
+ * @subpackage reactSlim
+ * @author     Moises Barquin <moises.barquin@gmail.com>
+ * @copyright  (c) 2016, Moisés Barquín <moises.barquin@gmail.com>
+ * @version    GIT: $Id$
+ */
 namespace mbarquin\reactSlim;
 
 use \mbarquin\reactSlim\Request\SlimRequest;
 use \mbarquin\reactSlim\Response\SlimResponse;
 
+/**
+ * Server launcher class. It makes the setup of the reactPHP server
+ * and launchs it
+ */
 class Server
 {
     /**
@@ -12,7 +32,6 @@ class Server
      * @var RequestInterface
      */
     private $requestAdapter = null;
-
 
     /**
      * Reference to a response adapter
@@ -32,7 +51,7 @@ class Server
     /**
      * Sets the listened port
      *
-     * @param type $port
+     * @param int $port
      *
      * @return \mbarquin\reactSlim\Server
      */
@@ -45,7 +64,14 @@ class Server
         return $this;
     }
 
-    private function getCallbacks($app)
+    /**
+     * Returns the two callbacks which will process the HTTP call
+     *
+     * @param \Slim\App $app Slim application instance
+     *
+     * @return callable
+     */
+    private function getCallbacks(\Slim\App $app)
     {
         return function (
                \React\Http\Request $request,
@@ -65,6 +91,10 @@ class Server
 
     /**
      * Checks Adapters and runs the server with the app
+     *
+     * @param \Slim\App $app Slim application instance
+     *
+     * @return callable
      */
     public function run(\Slim\App $app)
     {
@@ -85,4 +115,3 @@ class Server
     }
 
 }
-
