@@ -11,6 +11,6 @@
         "vendor-dir": "src/vendor"
     },
     "autoload": {
-        "psr-4": { "mbarquin\\reactSlim\\": "src/Http/" }
+        "psr-4": { "mbarquin\\reactSlim\\": "src/" }
     }
 }
