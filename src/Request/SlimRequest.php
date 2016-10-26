@@ -19,6 +19,7 @@ namespace mbarquin\reactSlim\Request;
 
 use Slim\Http\Request;
 use Slim\Http\Headers;
+use Slim\Http\Cookies;
 use Slim\Http\Uri;
 use Slim\Http\Body;
 
@@ -27,6 +28,16 @@ use Slim\Http\Body;
  */
 class SlimRequest implements RequestInterface
 {
+
+    static public function getHost($reactHead)
+    {
+        $host = explode(':', $reactHead);
+        if (count($host) === 1) {
+            $host[1] = '80';
+        }
+        return $host;
+    }
+
     /**
      * Creates a new request object from the data of a reactPHP request object
      *
@@ -38,19 +49,23 @@ class SlimRequest implements RequestInterface
     static public function createFromReactRequest(\React\Http\Request $request, $body = '')
     {
         $slimHeads = new Headers();
+        $cookies   = [];
+        $host      = ['', 80];
+
         foreach($request->getHeaders() as $reactHeadKey => $reactHead) {
             $slimHeads->add($reactHeadKey, $reactHead);
-            if($reactHeadKey === 'Host') {
-                $host = explode(':', $reactHead);
-                if (count($host) === 1) {
-                    $host[1] = '80';
-                }
+            switch($reactHeadKey) {
+                case 'Host':
+                    $host = self::getHost($reactHead);
+                    break;
+                case 'Cookie':
+                    $cookies = Cookies::parseHeader($reactHead);
+                    break;
             }
         }
 
         $slimUri = new Uri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
 
-        $cookies                         = [];
         $serverParams                    = $_SERVER;
         $serverParams['SERVER_PROTOCOL'] = 'HTTP/'.$request->getHttpVersion();
 
