@@ -70,13 +70,13 @@ class SlimRequest implements RequestInterface
      */
     static public function getBody($body)
     {
-        $slimBody = new RequestBody();
+        $slimBody = new Body();
 
         if (empty($body) === false) {
             $stream = fopen('php://temp', 'w+');
             fwrite($stream, $body);
 
-            $slimBody->attach($stream);
+            $slimBody = new Body($stream);
         }
         return $slimBody;
     }
