@@ -20,7 +20,7 @@ namespace mbarquin\reactSlim\Request;
 use Slim\Http\Request;
 use Slim\Http\Headers;
 use Slim\Http\Uri;
-use Slim\Http\RequestBody;
+use Slim\Http\Body;
 
 /**
  * Request adapter class file for a React request object

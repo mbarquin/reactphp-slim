@@ -105,7 +105,7 @@ class Server
         $socket         = new \React\Socket\Server($loop);
         $http           = new \React\Http\Server($socket, $loop);
 
-        // Ligamos la closure al evento request.
+        // Link callback to the Request event.
         $http->on('request', $serverCallback);
 
         echo "Server running at http://127.0.0.1:1337\n";

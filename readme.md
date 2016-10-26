@@ -4,10 +4,16 @@ reactphp-slim
 Introduction
 ------------
 
-This library is created in order to use reactPHP as a HTTP server for Slim framework, I have extended Slim request and response objects to implement functions which allows us to transfer data from native reactPHP objects into Slim objects. With this we will be able to create a basic react server for Slim framework.
+This library is created in order to use reactPHP as a HTTP server for Slim framework. It will launch a Slim\App process when a request is made, and at the same time it will transfer data from reactPHP native objects into Slim objects. With this, we will be able to create a basic react server for a Slim framework application.
 
-Now working on a new way to setup the reactPHP server and run the Slim Application, please use v0.4.2 release (doc bellow), this version is not finished yet, I'm testing it.
+##Installation
+You can install the component in the following ways:
 
+* Use the official Github repository (https://github.com/mbarquin/reactphp-slim.git)
+* Use composer : composer require mbarquin/reactphp-slim --dev
+
+##Usage
+After the composer autoload requirement a Slim\App should be instanced and prepared as usual. Slim\App can be bootstrapped and all dependencies can be injected as you like, after that, a reactphp-slim server should be instanced and call the run method in it, using slim\App as parameter. The reactphp-slim server will act as intermediary and will launch the slim application through the ``process`` method when requested, this method avoids the usual request and response bootstrap made by Slim.
 
 ```php
 require '../vendor/autoload.php';
@@ -32,6 +38,14 @@ $server = new \mbarquin\reactSlim\Server();
 
 $server->withPort(1337)->run($app);
 ```
+
+\mbarquin\reactSlim\Server object is the class which is going to configure and launch a ReactPHP server. It has two main methods
+
+**withPort($int)**
+Sets the port the server will be listening to, by default it will be set to 1337.
+
+**run(\Slim\App $app)**
+It launches the server process and wait until a request is made to launch the \Slim\App passed as parameter.
 
 
 ### v0.4.2 Setup
