@@ -6,6 +6,8 @@ Introduction
 
 This library is created in order to use reactPHP as a HTTP server for Slim framework. It will launch a Slim\App process when a request is made, and at the same time it will transfer data from reactPHP native objects into Slim objects. With this, we will be able to create a basic react server for a Slim framework application.
 
+Data, cookies and file uploads transmission between react and Slim objects. You can access through slim objects native functions to uploaded files and cookies.
+
 ##Installation
 You can install the component in the following ways:
 
@@ -36,7 +38,7 @@ $app->any('/hello/{name}', function (
 
 $server = new \mbarquin\reactSlim\Server();
 
-$server->withPort(1337)->run($app);
+$server->withHost('192.168.67.1')->withPort(1337)->run($app);
 ```
 
 \mbarquin\reactSlim\Server object is the class which is going to configure and launch a ReactPHP server. It has two main methods

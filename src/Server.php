@@ -47,6 +47,18 @@ class Server
      */
     private $port = 1337;
 
+    /**
+     * Sets which ip will be listened
+     * @var type
+     */
+    private $host = '127.0.0.1';
+
+    /**
+     * Array with info about partial file uploads
+     *
+     * @var array
+     */
+    private $partials = [];
 
     /**
      * Sets the listened port
@@ -65,6 +77,22 @@ class Server
     }
 
     /**
+     * Sets the listened ip
+     *
+     * @param int $ip
+     *
+     * @return \mbarquin\reactSlim\Server
+     */
+    public function withHost($ip)
+    {
+        if (empty($ip) === false) {
+            $this->host = $ip;
+        }
+
+        return $this;
+    }
+
+    /**
      * Returns the two callbacks which will process the HTTP call
      *
      * @param \Slim\App $app Slim application instance
@@ -73,18 +101,34 @@ class Server
      */
     private function getCallbacks(\Slim\App $app)
     {
+        $server = $this;
         return function (
                \React\Http\Request $request,
-               \React\Http\Response $response) use ($app){
+               \React\Http\Response $response) use ($app, $server) {
 
-            $request->on('data', function($body) use ($request, $response, $app) {
-
+            $request->on('data', function($body) use ($request, $response, $app, $server) {
                 $slRequest  = SlimRequest::createFromReactRequest($request, $body);
+                $boundary   = SlimRequest::checkPartialUpload($slRequest);
+
                 $slResponse = SlimResponse::createResponse();
 
-                $app->process($slRequest, $slResponse);
+                if($boundary !== false) {
+                    if(isset($server->partials[$boundary]) === false) {
+                        $server->partials[$boundary]['boundary'] = $boundary;
+                    }
+                    $continue = SlimRequest::parseBody($body, $server->partials[$boundary]);
+                    if ($continue === false) {
+                        $filesArr = SlimRequest::getSlimFilesArray($server->partials[$boundary]);
 
-                SlimResponse::setReactResponse($response, $slResponse, true);
+                        $lastRequest = $slRequest->withUploadedFiles($filesArr)->withParsedBody($server->partials[$boundary]['fields']);
+                        $app->process($lastRequest, $slResponse);
+                        SlimResponse::setReactResponse($response, $slResponse, true);
+                    }
+
+                } else {
+                    $app->process($slRequest, $slResponse);
+                    SlimResponse::setReactResponse($response, $slResponse, true);
+                }
             });
         };
     }
@@ -108,9 +152,9 @@ class Server
         // Link callback to the Request event.
         $http->on('request', $serverCallback);
 
-        echo "Server running at http://127.0.0.1:1337\n";
+        echo "Server running at http://".$this->host.":".$this->port."\n";
 
-        $socket->listen($this->port);
+        $socket->listen($this->port, $this->host);
         $loop->run();
     }
 

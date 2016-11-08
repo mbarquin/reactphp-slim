@@ -22,6 +22,7 @@ use Slim\Http\Headers;
 use Slim\Http\Cookies;
 use Slim\Http\Uri;
 use Slim\Http\Body;
+use Slim\Http\UploadedFile;
 
 /**
  * Request adapter class file for a React request object
@@ -29,6 +30,19 @@ use Slim\Http\Body;
 class SlimRequest implements RequestInterface
 {
 
+    const HEADERMULTI        = 'multipart/form-data';
+    const BOUNDARYSPLIT      = 'boundary=';
+    const FIXEDBOUNDARY      = '--';
+    const CONTENTDISPOSITION = "\r\nContent-Disposition:";
+
+
+    /**
+     * Returns host name and port as array
+     *
+     * @param type $reactHead
+     *
+     * @return string
+     */
     static public function getHost($reactHead)
     {
         $host = explode(':', $reactHead);
@@ -56,7 +70,7 @@ class SlimRequest implements RequestInterface
             $slimHeads->add($reactHeadKey, $reactHead);
             switch($reactHeadKey) {
                 case 'Host':
-                    $host = self::getHost($reactHead);
+                    $host = static::getHost($reactHead);
                     break;
                 case 'Cookie':
                     $cookies = Cookies::parseHeader($reactHead);
@@ -69,11 +83,188 @@ class SlimRequest implements RequestInterface
         $serverParams                    = $_SERVER;
         $serverParams['SERVER_PROTOCOL'] = 'HTTP/'.$request->getHttpVersion();
 
-        $slimBody = self::getBody($body);
+        $slimBody = static::getBody($body);
         return new Request(
                 $request->getMethod(), $slimUri, $slimHeads, $cookies,
                 $serverParams, $slimBody
             );
+    }
+
+    /**
+     * Checks if request headers are partial upload headers
+     *
+     * @param Request $slRequest Slim request object
+     *
+     * @return boolean
+     */
+    static public function checkPartialUpload(\Slim\Http\Request $slRequest) {
+        if($slRequest->hasHeader('Content-Type') === true) {
+            $contentType = $slRequest->getHeader('Content-Type');
+
+            if(stripos($contentType[0], static::HEADERMULTI) !== false) {
+                $posBoundary = stripos($contentType[0], static::BOUNDARYSPLIT);
+                $posBoundary = $posBoundary + strlen(static::BOUNDARYSPLIT);
+
+                return static::FIXEDBOUNDARY.substr($contentType[0], $posBoundary);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Writes temporary file into tmp folder and returns its name
+     *
+     * @param type $bodyPart Splitted part from request body
+     *
+     * @return string Temp file name
+     */
+    public static function getTmpFile($bodyPart)
+    {
+        $temp_file = tempnam(sys_get_temp_dir(), 'React');
+        $initPos = strpos($bodyPart, "\r\n\r\n");
+
+        $handle = fopen($temp_file, "w");
+
+        fwrite ($handle, substr($bodyPart, $initPos+4));
+        fclose($handle);
+
+        return $temp_file;
+    }
+
+    /**
+     * Writes data into partial uploads array
+     *
+     * @param array  $filePartialsInfo Data with current uploaded files
+     * @param string $name             HTML Input name
+     * @param string $filename         Original file name
+     * @param string $contentType      File content type defined by browser
+     * @param string $temp_file        Temp file path and name
+     *
+     * @return void
+     */
+    static public function writeFilesArray(&$filePartialsInfo, $name, $filename, $contentType, $temp_file)
+    {
+        $index = $name[1];
+
+        $filePartialsInfo['files'][$index]['name']     = $filename[1];
+        $filePartialsInfo['files'][$index]['type']     = $contentType[1];
+        $filePartialsInfo['files'][$index]['tmp_name'] = $temp_file;
+
+        $filePartialsInfo['last']['type']              = 'files';
+        $filePartialsInfo['last']['index']             = $index;
+    }
+
+    /**
+     * Writes data into a new tmp file
+     *
+     * @param string $bodyPart Splitted part from body
+     * @param string $filename Name and path of temp file
+     * @return type
+     */
+    static public function writeToTmpFile($bodyPart, $filename) {
+        $handle = fopen($filename, "a");
+        fwrite($handle, $bodyPart);
+        fclose($handle);
+    }
+
+    /**
+     * Build an uploaded file objects array(Collection)
+     *
+     * @param array $filePartialsInfo Data with current uploaded files
+     *
+     * @return array
+     */
+    static public function getSlimFilesArray($filePartialsInfo)
+    {
+        $ret = [];
+        foreach($filePartialsInfo['files']  as $name => $file) {
+            $ret[$name] = new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['size'], UPLOAD_ERR_OK, false);
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Checks parts headers, and parses data in it
+     *
+     * @param string $bodyPart         Splitted part from body
+     * @param array  $filePartialsInfo Data with current uploaded files
+     */
+    static function parseBodyParts($bodyPart, &$filePartialsInfo)
+    {
+        preg_match('/^'.static::CONTENTDISPOSITION.' (.*);/', $bodyPart, $contentDispo);
+
+        if (count($contentDispo) > 0) {
+            preg_match('/filename="(.*)"/', $bodyPart, $filename);
+            if(isset($filename[1]) === true) {
+                preg_match('/\r\nContent-Type: (.*)/', $bodyPart, $contentType);
+                preg_match('/name=\"(.*)\";/', $bodyPart, $name);
+
+                $temp_file = static::getTmpFile($bodyPart);
+                static::writeFilesArray($filePartialsInfo, $name, $filename, $contentType, $temp_file);
+
+            } else {
+                preg_match('/name=\"(.*)\"/', $bodyPart, $name);
+                $index = $name[1];
+
+                $initPos = strpos($bodyPart, "\r\n\r\n");
+                $filePartialsInfo['fields'][$index] = substr($bodyPart, $initPos+4);
+                $filePartialsInfo['fields'][$index] = substr($filePartialsInfo['fields'][$index], 0, -2);
+            }
+        } else {
+            if ($filePartialsInfo['last']['type'] === 'files') {
+                static::writeToTmpFile($bodyPart, $filePartialsInfo[$filePartialsInfo['last']['type']][$filePartialsInfo['last']['index']]['tmp_name']);
+            }
+        }
+    }
+
+    /**
+     * Parses body parts ageter splitting it with boundary string
+     *
+     * @param string $body             Body received from partial request
+     * @param array  $filePartialsInfo Data with current uploaded files
+     *
+     * @return boolean
+     */
+    static public function parseBody($body, &$filePartialsInfo)
+    {
+        $bodyParts = explode($filePartialsInfo['boundary'], $body);
+
+        if (empty($bodyParts[0]) === true) {
+            array_shift($bodyParts);
+        }
+
+        foreach($bodyParts as $piece) {
+            if ($piece !== "--\r\n") {
+                static::parseBodyParts($piece, $filePartialsInfo);
+            }
+        }
+
+        if( is_array($bodyParts) === true && in_array("--\r\n", $bodyParts) === true) {
+            static::setFileSizes($filePartialsInfo);
+            return false;
+        } elseif($bodyParts === '--') {
+            static::setFileSizes($filePartialsInfo);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Populates file array with all file sizes
+     *
+     * @param array $filePartialsInfo Data with current uploaded files
+     *
+     * @return void
+     */
+    static public function setFileSizes(&$filePartialsInfo)
+    {
+        if(isset($filePartialsInfo['files']) === true && count($filePartialsInfo['files']) > 0) {
+            $keys = array_keys($filePartialsInfo['files']);
+            foreach($keys as $index) {
+                $filePartialsInfo['files'][$index]['size'] = filesize($filePartialsInfo['files'][$index]['tmp_name']);
+            }
+        }
     }
 
     /**
