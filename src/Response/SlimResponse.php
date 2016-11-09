@@ -36,15 +36,35 @@ class SlimResponse implements ResponseInterface
      */
     static function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, $endRequest = false)
     {
-        $reactResp->writeHead(
-                $slimResponse->getStatusCode(), $slimResponse->getHeaders()
-            );
+        $headers = static::reduceHeaders($slimResponse->getHeaders());
+        $reactResp->writeHead($slimResponse->getStatusCode(), $headers);
 
         $reactResp->write($slimResponse->getBody());
 
         if ($endRequest === true) {
             $reactResp->end();
         }
+    }
+
+    /**
+     * Reduces slim headers array to be used on reactPHP
+     *
+     * @param array $headersArray Headers array given by slim
+     *
+     * @return array Ready 4 reactPHP array
+     */
+    static public function reduceHeaders($headersArray)
+    {
+        $auxArray = [];
+        foreach ($headersArray as $name => $value) {
+            $myContent = '';
+            foreach($value as $text) {
+                $myContent .= $text;
+            }
+            $auxArray[$name] = $myContent;
+        }
+
+        return $auxArray;
     }
 
     /**

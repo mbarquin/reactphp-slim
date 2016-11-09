@@ -120,7 +120,10 @@ class Server
                     if ($continue === false) {
                         $filesArr = SlimRequest::getSlimFilesArray($server->partials[$boundary]);
 
-                        $lastRequest = $slRequest->withUploadedFiles($filesArr)->withParsedBody($server->partials[$boundary]['fields']);
+                        $lastRequest = $slRequest
+                                ->withUploadedFiles($filesArr)
+                                ->withParsedBody($server->partials[$boundary]['fields']);
+                        
                         $slResponse  = $app->process($lastRequest, $slResponse);
                         SlimResponse::setReactResponse($response, $slResponse, true);
                     }
