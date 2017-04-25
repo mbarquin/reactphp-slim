@@ -39,20 +39,6 @@ use Slim\App as SlimInstance;
 class Server
 {
     /**
-     * Reference to a request adapter
-     *
-     * @var RequestAdapterInterface
-     */
-    private $requestAdapter = null;
-
-    /**
-     * Reference to a response adapter
-     *
-     * @var ResponseAdapterInterface
-     */
-    private $responseAdapter = null;
-
-    /**
      * Sets which port will be listened
      *
      * @var int
