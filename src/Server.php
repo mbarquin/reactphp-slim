@@ -178,7 +178,7 @@ class Server
      *
      * @param \Slim\App $app Slim application instance
      *
-     * @return callable
+     * @return void
      */
     public function run(\Slim\App $app)
     {
