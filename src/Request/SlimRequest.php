@@ -82,7 +82,13 @@ class SlimRequest implements RequestInterface
             }
         }
 
-        $slimUri = new SlimPHPUri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
+        $slimUri = new SlimPHPUri(
+            'http',
+            $host[0],
+            (int) $host[1],
+            $request->getPath(),
+            $request->getQuery()
+        );
 
         $serverParams                    = $_SERVER;
         $serverParams['SERVER_PROTOCOL'] = 'HTTP/'.$request->getHttpVersion();
@@ -123,7 +129,7 @@ class SlimRequest implements RequestInterface
     /**
      * Writes temporary file into tmp folder and returns its name
      *
-     * @param string $bodyPart Splitted part from request body
+     * @param string $bodyPart Split part from request body
      *
      * @return string Temp file name
      */
@@ -151,8 +157,13 @@ class SlimRequest implements RequestInterface
      *
      * @return void
      */
-    static public function writeFilesArray(array &$filePartialsInfo, string $name, string $filename, string $contentType, string $temp_file)
-    {
+    static public function writeFilesArray(
+        array  &$filePartialsInfo,
+        string $name,
+        string $filename,
+        string $contentType,
+        string $temp_file
+    ) {
         $index = $name[1];
 
         $filePartialsInfo['files'][$index]['name']     = $filename[1];
@@ -166,7 +177,7 @@ class SlimRequest implements RequestInterface
     /**
      * Writes data into a new tmp file
      *
-     * @param string $bodyPart Splitted part from body
+     * @param string $bodyPart Split part from body
      * @param string $filename Name and path of temp file
      * @return void
      */
@@ -188,7 +199,14 @@ class SlimRequest implements RequestInterface
     {
         $ret = [];
         foreach($filePartialsInfo['files']  as $name => $file) {
-            $ret[$name] = new SlimPHPUploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['size'], UPLOAD_ERR_OK, false);
+            $ret[$name] = new SlimPHPUploadedFile(
+                $file['tmp_name'],
+                $file['name'],
+                $file['type'],
+                $file['size'],
+                UPLOAD_ERR_OK,
+                false
+            );
         }
 
         return $ret;
@@ -197,7 +215,7 @@ class SlimRequest implements RequestInterface
     /**
      * Checks parts headers, and parses data in it
      *
-     * @param string $bodyPart         Splitted part from body
+     * @param string $bodyPart         Split part from body
      * @param array  $filePartialsInfo Data with current uploaded files
      *
      * @return void
@@ -225,13 +243,16 @@ class SlimRequest implements RequestInterface
             }
         } else {
             if ($filePartialsInfo['last']['type'] === 'files') {
-                static::writeToTmpFile($bodyPart, $filePartialsInfo[$filePartialsInfo['last']['type']][$filePartialsInfo['last']['index']]['tmp_name']);
+                static::writeToTmpFile(
+                    $bodyPart,
+                    $filePartialsInfo[$filePartialsInfo['last']['type']][$filePartialsInfo['last']['index']]['tmp_name']
+                );
             }
         }
     }
 
     /**
-     * Parses body parts ageter splitting it with boundary string
+     * Parses body parts after splitting it with boundary string
      *
      * @param string $body             Body received from partial request
      * @param array  $filePartialsInfo Data with current uploaded files
@@ -271,7 +292,10 @@ class SlimRequest implements RequestInterface
      */
     static public function setFileSizes(array &$filePartialsInfo)
     {
-        if(isset($filePartialsInfo['files']) === true && count($filePartialsInfo['files']) > 0) {
+        if(
+            isset($filePartialsInfo['files']) === true
+            && count($filePartialsInfo['files']) > 0
+        ) {
             $keys = array_keys($filePartialsInfo['files']);
             foreach($keys as $index) {
                 $filePartialsInfo['files'][$index]['size'] = filesize($filePartialsInfo['files'][$index]['tmp_name']);

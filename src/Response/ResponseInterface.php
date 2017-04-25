@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Request Interface file for an React Adapter request objectv
+ * Request Interface file for an React Adapter request object
  *
  * (c) Moisés Barquín <moises.barquin@gmail.com>
  *
@@ -30,13 +30,17 @@ interface ResponseInterface
      * It performs the setup of a reactPHP response from another response
      * object and finishes the communication
      *
-     * @param ReactResponse $reactResp    ReactPHP native response object
+     * @param ReactResponse    $reactResp    ReactPHP native response object
      * @param SlimPHPResponse  $slimResponse SlimPHP native response object
-     * @param boolean              $endRequest   If true, response flush will be finished
+     * @param boolean          $endRequest   If true, response flush will be finished
      *
      * @return void
      */
-    static public function setReactResponse(ReactResponse $reactResp, SlimPHPResponse $slimResponse, bool $endRequest = false);
+    static public function setReactResponse(
+        ReactResponse $reactResp,
+        SlimPHPResponse $slimResponse,
+        bool $endRequest = false
+    );
 
     /**
      * Returns a new response object instance

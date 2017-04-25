@@ -51,7 +51,13 @@ class Request extends SlimPHPRequest
             }
         }
 
-        $slimUri = new SlimPHPUri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
+        $slimUri = new SlimPHPUri(
+            'http',
+            $host[0],
+            (int) $host[1],
+            $request->getPath(),
+            $request->getQuery()
+        );
 
         $cookies = [];
         $serverParams = $_SERVER;
@@ -60,8 +66,12 @@ class Request extends SlimPHPRequest
         $slimBody = new SlimPHPRequestBody();
 
         return new self(
-                $request->getMethod(), $slimUri, $slimHeads, $cookies,
-                $serverParams, $slimBody
-            );
+            $request->getMethod(),
+            $slimUri,
+            $slimHeads,
+            $cookies,
+            $serverParams,
+            $slimBody
+        );
     }
 }

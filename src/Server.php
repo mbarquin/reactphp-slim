@@ -19,27 +19,36 @@ declare(strict_types=1);
 namespace mbarquin\reactSlim;
 
 use \mbarquin\reactSlim\ {
+    Request\RequestInterface as RequestAdapterInterface,
     Request\SlimRequest,
-    Response\SlimResponse
+    Response\SlimResponse,
+    Response\ResponseInterface as ResponseAdapterInterface
 };
+use React\ {
+    EventLoop\Factory as ReactEventLoopFactory,
+    Http\Response as ReactResponse,
+    Http\Request  as ReactRequest,
+    Http\Server   as ReactHttpServer,
+    Socket\Server as ReactSocketServer
+};
+use Slim\App as SlimInstance;
 
 /**
- * Server launcher class. It makes the setup of the reactPHP server
- * and launchs it
+ * Instantiates the setup of the reactPHP server and launches it
  */
 class Server
 {
     /**
      * Reference to a request adapter
      *
-     * @var RequestInterface
+     * @var RequestAdapterInterface
      */
     private $requestAdapter = null;
 
     /**
      * Reference to a response adapter
      *
-     * @var ResponseInterface
+     * @var ResponseAdapterInterface
      */
     private $responseAdapter = null;
 
@@ -52,7 +61,7 @@ class Server
 
     /**
      * Sets which ip will be listened
-     * @var type
+     * @var string
      */
     private $host = '127.0.0.1';
 
@@ -98,16 +107,17 @@ class Server
     /**
      * Returns the two callbacks which will process the HTTP call
      *
-     * @param \Slim\App $app Slim application instance
+     * @param SlimInstance $app Slim application instance
      *
      * @return callable
      */
-    private function getCallbacks(\Slim\App $app) :callable
+    private function getCallbacks(SlimInstance $app) :callable
     {
         $server = $this;
         return function (
-               \React\Http\Request $request,
-               \React\Http\Response $response) use ($app, $server) {
+               ReactRequest $request,
+               ReactResponse $response
+        ) use ($app, $server) {
 
             $request->on('data', function($body) use ($request, $response, $app, $server) {
                 $slRequest  = SlimRequest::createFromReactRequest($request, $body);
@@ -142,18 +152,18 @@ class Server
     /**
      * Checks Adapters and runs the server with the app
      *
-     * @param \Slim\App $app Slim application instance
+     * @param SlimInstance $app Slim application instance
      *
      * @return void
      */
-    public function run(\Slim\App $app)
+    public function run(SlimInstance $app)
     {
         $serverCallback = $this->getCallbacks($app);
 
         // We make the setup of ReactPHP.
-        $loop           = \React\EventLoop\Factory::create();
-        $socket         = new \React\Socket\Server($loop);
-        $http           = new \React\Http\Server($socket, $loop);
+        $loop           = ReactEventLoopFactory::create();
+        $socket         = new ReactSocketServer($loop);
+        $http           = new ReactHttpServer($socket, $loop);
 
         // Link callback to the Request event.
         $http->on('request', $serverCallback);

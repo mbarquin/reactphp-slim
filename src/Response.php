@@ -29,7 +29,7 @@ use React\Http\Response as ReactResponse;
 class Response extends SlimPHPResponse
  {
     /**
-     * It performs the setup of a reactPHP response from a SlimpPHP response
+     * It performs the setup of a reactPHP response from a SlimPHP response
      * object and finishes the communication
      *
      * @param ReactResponse $reactResp   ReactPHP native response object

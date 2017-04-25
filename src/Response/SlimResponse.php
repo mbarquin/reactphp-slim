@@ -19,8 +19,6 @@ declare(strict_types=1);
  */
 namespace mbarquin\reactSlim\Response;
 
-use Slim\Http\Response;
-
 use React\Http\Response as ReactResponse;
 use Slim\Http\Response as SlimPHPResponse;
 
@@ -31,7 +29,7 @@ use Slim\Http\Response as SlimPHPResponse;
 class SlimResponse implements ResponseInterface
 {
     /**
-     * It performs the setup of a reactPHP response from a SlimpPHP response
+     * It performs the setup of a reactPHP response from a SlimPHP response
      * object and finishes the communication
      *
      * @param ReactResponse    $reactResp    ReactPHP native response object
@@ -40,8 +38,11 @@ class SlimResponse implements ResponseInterface
      *
      * @return void
      */
-    static function setReactResponse(ReactResponse $reactResp, SlimPHPResponse $slimResponse, bool $endRequest = false)
-    {
+    static function setReactResponse(
+        ReactResponse $reactResp,
+        SlimPHPResponse $slimResponse,
+        bool $endRequest = false
+    ) {
         $headers = static::reduceHeaders($slimResponse->getHeaders());
         $reactResp->writeHead($slimResponse->getStatusCode(), $headers);
 
