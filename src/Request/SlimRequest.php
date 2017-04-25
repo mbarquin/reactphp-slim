@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Request adapter class file for a React request object
  *
@@ -17,12 +18,14 @@
  */
 namespace mbarquin\reactSlim\Request;
 
-use Slim\Http\Request;
-use Slim\Http\Headers;
-use Slim\Http\Cookies;
-use Slim\Http\Uri;
-use Slim\Http\Body;
-use Slim\Http\UploadedFile;
+use Slim\Http\{
+    Request,
+    Headers,
+    Cookies,
+    Uri,
+    Body,
+    UploadedFile
+};
 
 /**
  * Request adapter class file for a React request object
@@ -39,11 +42,11 @@ class SlimRequest implements RequestInterface
     /**
      * Returns host name and port as array
      *
-     * @param type $reactHead
+     * @param string $reactHead
      *
-     * @return string
+     * @return array
      */
-    static public function getHost($reactHead)
+    static public function getHost(string $reactHead) :array
     {
         $host = explode(':', $reactHead);
         if (count($host) === 1) {
@@ -60,7 +63,7 @@ class SlimRequest implements RequestInterface
      *
      * @return \Slim\Http\Request
      */
-    static public function createFromReactRequest(\React\Http\Request $request, $body = '')
+    static public function createFromReactRequest(\React\Http\Request $request, string $body = '') :Request
     {
         $slimHeads = new Headers();
         $cookies   = [];
@@ -95,9 +98,10 @@ class SlimRequest implements RequestInterface
      *
      * @param Request $slRequest Slim request object
      *
-     * @return boolean
+     * @return bool
      */
-    static public function checkPartialUpload(\Slim\Http\Request $slRequest) {
+    static public function checkPartialUpload(\Slim\Http\Request $slRequest) :bool
+    {
         if($slRequest->hasHeader('Content-Type') === true) {
             $contentType = $slRequest->getHeader('Content-Type');
 
@@ -114,11 +118,11 @@ class SlimRequest implements RequestInterface
     /**
      * Writes temporary file into tmp folder and returns its name
      *
-     * @param type $bodyPart Splitted part from request body
+     * @param string $bodyPart Splitted part from request body
      *
      * @return string Temp file name
      */
-    public static function getTmpFile($bodyPart)
+    public static function getTmpFile(string $bodyPart) :string
     {
         $temp_file = tempnam(sys_get_temp_dir(), 'React');
         $initPos = strpos($bodyPart, "\r\n\r\n");
@@ -142,7 +146,7 @@ class SlimRequest implements RequestInterface
      *
      * @return void
      */
-    static public function writeFilesArray(&$filePartialsInfo, $name, $filename, $contentType, $temp_file)
+    static public function writeFilesArray(array &$filePartialsInfo, string $name, string $filename, string $contentType, string $temp_file)
     {
         $index = $name[1];
 
@@ -159,9 +163,10 @@ class SlimRequest implements RequestInterface
      *
      * @param string $bodyPart Splitted part from body
      * @param string $filename Name and path of temp file
-     * @return type
+     * @return void
      */
-    static public function writeToTmpFile($bodyPart, $filename) {
+    static public function writeToTmpFile(string $bodyPart, string $filename)
+    {
         $handle = fopen($filename, "a");
         fwrite($handle, $bodyPart);
         fclose($handle);
@@ -174,7 +179,7 @@ class SlimRequest implements RequestInterface
      *
      * @return array
      */
-    static public function getSlimFilesArray($filePartialsInfo)
+    static public function getSlimFilesArray(array $filePartialsInfo) :array
     {
         $ret = [];
         foreach($filePartialsInfo['files']  as $name => $file) {
@@ -189,8 +194,10 @@ class SlimRequest implements RequestInterface
      *
      * @param string $bodyPart         Splitted part from body
      * @param array  $filePartialsInfo Data with current uploaded files
+     *
+     * @return void
      */
-    static function parseBodyParts($bodyPart, &$filePartialsInfo)
+    static function parseBodyParts(string $bodyPart, array &$filePartialsInfo)
     {
         preg_match('/^'.static::CONTENTDISPOSITION.' (.*);/', $bodyPart, $contentDispo);
 
@@ -224,9 +231,9 @@ class SlimRequest implements RequestInterface
      * @param string $body             Body received from partial request
      * @param array  $filePartialsInfo Data with current uploaded files
      *
-     * @return boolean
+     * @return bool
      */
-    static public function parseBody($body, &$filePartialsInfo)
+    static public function parseBody(string $body, array &$filePartialsInfo) :bool
     {
         $bodyParts = explode($filePartialsInfo['boundary'], $body);
 
@@ -257,7 +264,7 @@ class SlimRequest implements RequestInterface
      *
      * @return void
      */
-    static public function setFileSizes(&$filePartialsInfo)
+    static public function setFileSizes(array &$filePartialsInfo)
     {
         if(isset($filePartialsInfo['files']) === true && count($filePartialsInfo['files']) > 0) {
             $keys = array_keys($filePartialsInfo['files']);
@@ -272,9 +279,9 @@ class SlimRequest implements RequestInterface
      *
      * @param string $body Content of received call
      *
-     * @return \Slim\Http\RequestBody
+     * @return Body
      */
-    static public function getBody($body)
+    static public function getBody(string $body) :Body
     {
         $stream = fopen('php://temp', 'w+');
         if (empty($body) === false) {

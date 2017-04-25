@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Legacy request adapter class file for a React request object
  *
@@ -17,9 +18,11 @@
  */
 namespace mbarquin\reactSlim;
 
-use Slim\Http\Headers;
-use Slim\Http\Uri;
-use Slim\Http\RequestBody;
+use Slim\Http\ {
+    Headers,
+    Uri,
+    RequestBody
+};
 
 /**
  * Legacy request adapter class file for a React request object
@@ -31,9 +34,9 @@ class Request extends \Slim\Http\Request
      *
      * @param \React\Http\Request $request ReactPHP native request object
      *
-     * @return \Slim\Http\Request
+     * @return self
      */
-    static public function createFromReactRequest(\React\Http\Request $request)
+    static public function createFromReactRequest(\React\Http\Request $request) :self
     {
         $slimHeads = new Headers();
         foreach($request->getHeaders() as $reactHeadKey => $reactHead) {

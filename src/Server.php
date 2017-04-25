@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Server launcher class file. It makes the setup of the reactPHP server
  *
@@ -17,8 +18,10 @@
  */
 namespace mbarquin\reactSlim;
 
-use \mbarquin\reactSlim\Request\SlimRequest;
-use \mbarquin\reactSlim\Response\SlimResponse;
+use \mbarquin\reactSlim\ {
+    Request\SlimRequest,
+    Response\SlimResponse
+};
 
 /**
  * Server launcher class. It makes the setup of the reactPHP server
@@ -65,9 +68,9 @@ class Server
      *
      * @param int $port
      *
-     * @return \mbarquin\reactSlim\Server
+     * @return self
      */
-    public function withPort($port)
+    public function withPort($port) :self
     {
         if (is_int($port) === true) {
             $this->port = $port;
@@ -81,9 +84,9 @@ class Server
      *
      * @param int $ip
      *
-     * @return \mbarquin\reactSlim\Server
+     * @return self
      */
-    public function withHost($ip)
+    public function withHost($ip) :self
     {
         if (empty($ip) === false) {
             $this->host = $ip;
@@ -99,7 +102,7 @@ class Server
      *
      * @return callable
      */
-    private function getCallbacks(\Slim\App $app)
+    private function getCallbacks(\Slim\App $app) :callable
     {
         $server = $this;
         return function (
@@ -141,7 +144,7 @@ class Server
      *
      * @param \Slim\App $app Slim application instance
      *
-     * @return callable
+     * @return void
      */
     public function run(\Slim\App $app)
     {

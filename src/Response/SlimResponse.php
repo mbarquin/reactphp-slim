@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Response adapter class file.
  * It performs the setup of a reactPHP response and finishes the communication
@@ -18,6 +19,9 @@
  */
 namespace mbarquin\reactSlim\Response;
 
+use Slim\Http\Response;
+
+
 /**
  * Response adapter class
  * It performs the setup of a reactPHP response and finishes the communication
@@ -30,11 +34,11 @@ class SlimResponse implements ResponseInterface
      *
      * @param \React\Http\Response $reactResp    ReactPHP native response object
      * @param \Slim\Http\Response  $slimResponse SlimPHP native response object
-     * @param boolean              $endRequest   If true, response flush will be finished
+     * @param bool                 $endRequest   If true, response flush will be finished
      *
      * @return void
      */
-    static function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, $endRequest = false)
+    static function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, bool $endRequest = false)
     {
         $headers = static::reduceHeaders($slimResponse->getHeaders());
         $reactResp->writeHead($slimResponse->getStatusCode(), $headers);
@@ -53,7 +57,7 @@ class SlimResponse implements ResponseInterface
      *
      * @return array Ready 4 reactPHP array
      */
-    static public function reduceHeaders($headersArray)
+    static public function reduceHeaders(array $headersArray) :array
     {
         $auxArray = [];
         foreach ($headersArray as $name => $value) {
@@ -72,7 +76,7 @@ class SlimResponse implements ResponseInterface
      *
      * @return \Slim\Http\Response
      */
-    static public function createResponse()
+    static public function createResponse() :Response
     {
         return new \Slim\Http\Response();
     }

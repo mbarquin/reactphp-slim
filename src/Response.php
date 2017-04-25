@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Legacy Response adapter class file.
  * It performs the setup of a reactPHP response and finishes the communication
@@ -29,11 +30,11 @@ class Response extends \Slim\Http\Response
      * object and finishes the communication
      *
      * @param \React\Http\Response $reactResp    ReactPHP native response object
-     * @param boolean              $endRequest   If true, response flush will be finished
+     * @param bool                 $endRequest   If true, response flush will be finished
      *
      * @return void
      */
-    public function setReactResponse(\React\Http\Response $reactResp, $endRequest = false)
+    public function setReactResponse(\React\Http\Response $reactResp, bool $endRequest = false)
     {
         $reactResp->writeHead($this->getStatusCode(), $this->getHeaders());
         $reactResp->write($this->getBody());

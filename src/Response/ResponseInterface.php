@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Request Interface file for an React Adapter request objectv
  *
@@ -17,6 +18,9 @@
  */
 namespace mbarquin\reactSlim\Response;
 
+use Slim\Http\Response;
+
+
 /**
  * Contract to have a request to adapt a react request object to a new one
  */
@@ -32,12 +36,12 @@ interface ResponseInterface
      *
      * @return void
      */
-    static public function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, $endRequest = false);
+    static public function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, bool $endRequest = false);
 
     /**
      * Returns a new response object instance
      *
      * @return \Slim\Http\Response
      */
-    static public function createResponse();
+    static public function createResponse() :Response;
 }
