@@ -19,26 +19,28 @@ declare(strict_types=1);
 namespace mbarquin\reactSlim;
 
 use Slim\Http\ {
-    Headers,
-    Uri,
-    RequestBody
+    Headers as SlimPHPHeaders,
+    Uri as SlimPHPUri,
+    Request as SlimPHPRequest,
+    RequestBody as SlimPHPRequestBody
 };
+use React\Http\Request as ReactRequest;
 
 /**
  * Legacy request adapter class file for a React request object
  */
-class Request extends \Slim\Http\Request
+class Request extends SlimPHPRequest
 {
     /**
      * Creates a new request object from the data of a reactPHP request object
      *
-     * @param \React\Http\Request $request ReactPHP native request object
+     * @param ReactRequest $request ReactPHP native request object
      *
      * @return self
      */
-    static public function createFromReactRequest(\React\Http\Request $request) :self
+    static public function createFromReactRequest(ReactRequest $request) :self
     {
-        $slimHeads = new Headers();
+        $slimHeads = new SlimPHPHeaders();
         foreach($request->getHeaders() as $reactHeadKey => $reactHead) {
             $slimHeads->add($reactHeadKey, $reactHead);
             if($reactHeadKey === 'Host') {
@@ -49,13 +51,13 @@ class Request extends \Slim\Http\Request
             }
         }
 
-        $slimUri = new Uri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
+        $slimUri = new SlimPHPUri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
 
         $cookies = [];
         $serverParams = $_SERVER;
         $serverParams['SERVER_PROTOCOL'] = 'HTTP/'.$request->getHttpVersion();
 
-        $slimBody = new RequestBody();
+        $slimBody = new SlimPHPRequestBody();
 
         return new self(
                 $request->getMethod(), $slimUri, $slimHeads, $cookies,

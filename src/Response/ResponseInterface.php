@@ -18,8 +18,8 @@ declare(strict_types=1);
  */
 namespace mbarquin\reactSlim\Response;
 
-use Slim\Http\Response;
-
+use Slim\Http\Response as SlimPHPResponse;
+use React\Http\Response as ReactResponse;
 
 /**
  * Contract to have a request to adapt a react request object to a new one
@@ -30,18 +30,18 @@ interface ResponseInterface
      * It performs the setup of a reactPHP response from another response
      * object and finishes the communication
      *
-     * @param \React\Http\Response $reactResp    ReactPHP native response object
-     * @param \Slim\Http\Response  $slimResponse SlimPHP native response object
+     * @param ReactResponse $reactResp    ReactPHP native response object
+     * @param SlimPHPResponse  $slimResponse SlimPHP native response object
      * @param boolean              $endRequest   If true, response flush will be finished
      *
      * @return void
      */
-    static public function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, bool $endRequest = false);
+    static public function setReactResponse(ReactResponse $reactResp, SlimPHPResponse $slimResponse, bool $endRequest = false);
 
     /**
      * Returns a new response object instance
      *
-     * @return \Slim\Http\Response
+     * @return SlimPHPResponse
      */
-    static public function createResponse() :Response;
+    static public function createResponse() :SlimPHPResponse;
 }

@@ -19,13 +19,14 @@ declare(strict_types=1);
 namespace mbarquin\reactSlim\Request;
 
 use Slim\Http\{
-    Request,
-    Headers,
-    Cookies,
-    Uri,
-    Body,
-    UploadedFile
+    Request as SlimPHPRequest,
+    Headers as SlimPHPHeaders,
+    Cookies as SlimPHPCookies,
+    Uri as SlimPHPUri,
+    Body as SlimPHPBody,
+    UploadedFile as SlimPHPUploadedFile
 };
+use React\Http\Request as ReactRequest;
 
 /**
  * Request adapter class file for a React request object
@@ -58,14 +59,14 @@ class SlimRequest implements RequestInterface
     /**
      * Creates a new request object from the data of a reactPHP request object
      *
-     * @param \React\Http\Request $request ReactPHP native request object
-     * @param string              $body    Content of received call
+     * @param ReactRequest $request ReactPHP native request object
+     * @param string       $body    Content of received call
      *
-     * @return \Slim\Http\Request
+     * @return SlimPHPRequest
      */
-    static public function createFromReactRequest(\React\Http\Request $request, string $body = '') :Request
+    static public function createFromReactRequest(ReactRequest $request, string $body = '') :SlimPHPRequest
     {
-        $slimHeads = new Headers();
+        $slimHeads = new SlimPHPHeaders();
         $cookies   = [];
         $host      = ['', 80];
 
@@ -76,31 +77,35 @@ class SlimRequest implements RequestInterface
                     $host = static::getHost($reactHead);
                     break;
                 case 'Cookie':
-                    $cookies = Cookies::parseHeader($reactHead);
+                    $cookies = SlimPHPCookies::parseHeader($reactHead);
                     break;
             }
         }
 
-        $slimUri = new Uri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
+        $slimUri = new SlimPHPUri('http', $host[0], (int)$host[1], $request->getPath(), $request->getQuery());
 
         $serverParams                    = $_SERVER;
         $serverParams['SERVER_PROTOCOL'] = 'HTTP/'.$request->getHttpVersion();
 
         $slimBody = static::getBody($body);
-        return new Request(
-                $request->getMethod(), $slimUri, $slimHeads, $cookies,
-                $serverParams, $slimBody
+        return new SlimPHPRequest(
+                $request->getMethod(),
+                $slimUri,
+                $slimHeads,
+                $cookies,
+                $serverParams,
+                $slimBody
             );
     }
 
     /**
      * Checks if request headers are partial upload headers
      *
-     * @param Request $slRequest Slim request object
+     * @param SlimPHPRequest $slRequest Slim request object
      *
      * @return bool
      */
-    static public function checkPartialUpload(\Slim\Http\Request $slRequest) :bool
+    static public function checkPartialUpload(SlimPHPRequest $slRequest) :bool
     {
         if($slRequest->hasHeader('Content-Type') === true) {
             $contentType = $slRequest->getHeader('Content-Type');
@@ -183,7 +188,7 @@ class SlimRequest implements RequestInterface
     {
         $ret = [];
         foreach($filePartialsInfo['files']  as $name => $file) {
-            $ret[$name] = new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['size'], UPLOAD_ERR_OK, false);
+            $ret[$name] = new SlimPHPUploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['size'], UPLOAD_ERR_OK, false);
         }
 
         return $ret;
@@ -279,15 +284,15 @@ class SlimRequest implements RequestInterface
      *
      * @param string $body Content of received call
      *
-     * @return Body
+     * @return SlimPHPBody
      */
-    static public function getBody(string $body) :Body
+    static public function getBody(string $body) :SlimPHPBody
     {
         $stream = fopen('php://temp', 'w+');
         if (empty($body) === false) {
             fwrite($stream, $body);
         }
-        $slimBody = new Body($stream);
+        $slimBody = new SlimPHPBody($stream);
         return $slimBody;
     }
 }
