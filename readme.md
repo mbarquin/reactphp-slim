@@ -57,6 +57,19 @@ Sets the IP to be listened to
 **withPort($int)**
 Sets the port the server will be listening to, by default it will be set to 1337.
 
+An optional method is available to serve web pages and the assets directory if required:
+
+**withWebRoot($string)**
+Sets the web root in order to serve static content. For example, if you have a `./src/app/app.php` file and you assets are located in `./src/app/assets` then you would call the following:
+
+```php
+$server
+    ->withHost('192.168.67.1')
+    ->withPort(1337)
+    ->withWebRoot(__DIR__)
+    ->run($app);
+```
+
 **run(\Slim\App $app)**
 It launches the server process and wait until a request is made to launch the \Slim\App passed as parameter.
 
