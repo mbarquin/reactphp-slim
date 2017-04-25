@@ -113,29 +113,28 @@ class Server
      */
     private function getCallbacks(SlimInstance $app) :callable
     {
-        $server = $this;
         return function (
                ReactRequest $request,
                ReactResponse $response
-        ) use ($app, $server) {
+        ) use ($app) {
 
-            $request->on('data', function($body) use ($request, $response, $app, $server) {
+            $request->on('data', function($body) use ($request, $response, $app) {
                 $slRequest  = SlimRequest::createFromReactRequest($request, $body);
                 $boundary   = SlimRequest::checkPartialUpload($slRequest);
 
                 $slResponse = SlimResponse::createResponse();
 
                 if($boundary !== false) {
-                    if(isset($server->partials[$boundary]) === false) {
-                        $server->partials[$boundary]['boundary'] = $boundary;
+                    if(isset($this->partials[$boundary]) === false) {
+                        $this->partials[$boundary]['boundary'] = $boundary;
                     }
-                    $continue = SlimRequest::parseBody($body, $server->partials[$boundary]);
+                    $continue = SlimRequest::parseBody($body, $this->partials[$boundary]);
                     if ($continue === false) {
-                        $filesArr = SlimRequest::getSlimFilesArray($server->partials[$boundary]);
+                        $filesArr = SlimRequest::getSlimFilesArray($this->partials[$boundary]);
 
                         $lastRequest = $slRequest
                                 ->withUploadedFiles($filesArr)
-                                ->withParsedBody($server->partials[$boundary]['fields']);
+                                ->withParsedBody($this->partials[$boundary]['fields']);
                         
                         $slResponse  = $app->process($lastRequest, $slResponse);
                         SlimResponse::setReactResponse($response, $slResponse, true);
