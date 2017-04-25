@@ -12,6 +12,7 @@
  * @package    reactSlim
  * @subpackage reactSlim
  * @author     Moises Barquin <moises.barquin@gmail.com>
+ * @author     Nigel Greenway <github@futurepixels.co.uk>
  * @copyright  (c) 2016, Moisés Barquín <moises.barquin@gmail.com>
  * @version    GIT: $Id$
  */
@@ -19,6 +20,10 @@ namespace mbarquin\reactSlim;
 
 use \mbarquin\reactSlim\Request\SlimRequest;
 use \mbarquin\reactSlim\Response\SlimResponse;
+use React\Http\Request;
+use React\Http\Response;
+use Slim\App;
+
 
 /**
  * Server launcher class. It makes the setup of the reactPHP server
@@ -54,6 +59,11 @@ class Server
     private $host = '127.0.0.1';
 
     /**
+     * @var string $webRoot
+     */
+    private $webRoot;
+
+    /**
      * Array with info about partial file uploads
      *
      * @var array
@@ -71,6 +81,25 @@ class Server
     {
         if (is_int($port) === true) {
             $this->port = $port;
+        }
+
+        return $this;
+    }
+
+    /**
+     *
+     *
+     * @param string $directory
+     *
+     * @return \mbarquin\reactSlim\Server
+     */
+    public function withWebRoot($directory)
+    {
+        if (
+            empty($directory) === false
+            && is_dir($directory) === true
+        ) {
+            $this->webRoot = $directory;
         }
 
         return $this;
@@ -97,43 +126,51 @@ class Server
      *
      * @param \Slim\App $app Slim application instance
      *
-     * @return callable
+     * @return void
      */
-    private function getCallbacks(\Slim\App $app)
+    private function bootApp(\Slim\App $app, Request $request, Response $response)
     {
         $server = $this;
-        return function (
-               \React\Http\Request $request,
-               \React\Http\Response $response) use ($app, $server) {
+        $request->on('data', function($body) use ($request, $response, $app, $server) {
+            $slRequest  = SlimRequest::createFromReactRequest($request, $body);
+            $boundary   = SlimRequest::checkPartialUpload($slRequest);
+            $slResponse = SlimResponse::createResponse();
 
-            $request->on('data', function($body) use ($request, $response, $app, $server) {
-                $slRequest  = SlimRequest::createFromReactRequest($request, $body);
-                $boundary   = SlimRequest::checkPartialUpload($slRequest);
+            if($boundary !== false) {
+                if(isset($server->partials[$boundary]) === false) {
+                    $server->partials[$boundary]['boundary'] = $boundary;
+                }
+                $continue = SlimRequest::parseBody($body, $server->partials[$boundary]);
+                if ($continue === false) {
+                    $filesArr = SlimRequest::getSlimFilesArray($server->partials[$boundary]);
 
-                $slResponse = SlimResponse::createResponse();
+                    $lastRequest = $slRequest
+                        ->withUploadedFiles($filesArr)
+                        ->withParsedBody($server->partials[$boundary]['fields']);
 
-                if($boundary !== false) {
-                    if(isset($server->partials[$boundary]) === false) {
-                        $server->partials[$boundary]['boundary'] = $boundary;
-                    }
-                    $continue = SlimRequest::parseBody($body, $server->partials[$boundary]);
-                    if ($continue === false) {
-                        $filesArr = SlimRequest::getSlimFilesArray($server->partials[$boundary]);
-
-                        $lastRequest = $slRequest
-                                ->withUploadedFiles($filesArr)
-                                ->withParsedBody($server->partials[$boundary]['fields']);
-                        
-                        $slResponse  = $app->process($lastRequest, $slResponse);
-                        SlimResponse::setReactResponse($response, $slResponse, true);
-                    }
-
-                } else {
-                    $slResponse = $app->process($slRequest, $slResponse);
+                    $slResponse  = $app->process($lastRequest, $slResponse);
                     SlimResponse::setReactResponse($response, $slResponse, true);
                 }
-            });
-        };
+            } else {
+                $slResponse = $app->process($slRequest, $slResponse);
+                SlimResponse::setReactResponse($response, $slResponse, true);
+            }
+        });
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     *
+     * @return void
+     */
+    private function serveStatic(Request $request, Response $response)
+    {
+        $body = file_get_contents($this->webRoot . '/' . $request->getPath());
+        $response->writeHead(['Content-Type' => $request->getHeaders()['Accept'][0]]);
+        $response->end(
+            $body
+        );
     }
 
     /**
@@ -145,17 +182,37 @@ class Server
      */
     public function run(\Slim\App $app)
     {
-        $serverCallback = $this->getCallbacks($app);
-
         // We make the setup of ReactPHP.
-        $loop           = \React\EventLoop\Factory::create();
-        $socket         = new \React\Socket\Server($loop);
-        $http           = new \React\Http\Server($socket, $loop);
+        $loop   = \React\EventLoop\Factory::create();
+        $socket = new \React\Socket\Server($loop);
+        $http   = new \React\Http\Server($socket, $loop);
 
-        // Link callback to the Request event.
-        $http->on('request', $serverCallback);
-
-        echo "Server running at http://".$this->host.":".$this->port."\n";
+        if ($this->webRoot !== null) {
+            // Link callback to the Request event.
+            $http->on('request', function (Request $request, Response $response) use ($app) {
+                // POSSIBLY ADD MORE ITEMS?
+                if (preg_match('/\.(?:css|png|jpg|jpeg|gif)$/', $request->getPath())) {
+                    $this->serveStatic($request, $response);
+                } else {
+                    $this->bootApp($app, $request, $response);
+                }
+            });
+            echo sprintf(
+                "Server running at http://%s:%d\nAssets are being served from %s\n",
+                $this->host,
+                $this->port,
+                $this->webRoot
+            );
+        } else {
+            $http->on('request', function (Request $request, Response $response) use ($app) {
+                $this->bootApp($app, $request, $response);
+            });
+            echo sprintf(
+                "Server running at http://%s:%s\n",
+                $this->host,
+                $this->port
+            );
+        }
 
         $socket->listen($this->port, $this->host);
         $loop->run();
