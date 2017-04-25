@@ -59,11 +59,6 @@ class Server
     private $host = '127.0.0.1';
 
     /**
-     * @var string $webRoot
-     */
-    private $webRoot;
-
-    /**
      * Array with info about partial file uploads
      *
      * @var array
@@ -81,25 +76,6 @@ class Server
     {
         if (is_int($port) === true) {
             $this->port = $port;
-        }
-
-        return $this;
-    }
-
-    /**
-     *
-     *
-     * @param string $directory
-     *
-     * @return \mbarquin\reactSlim\Server
-     */
-    public function withWebRoot($directory)
-    {
-        if (
-            empty($directory) === false
-            && is_dir($directory) === true
-        ) {
-            $this->webRoot = $directory;
         }
 
         return $this;
@@ -159,14 +135,15 @@ class Server
     }
 
     /**
-     * @param Request $request
+     * @param string   $webRootDirectory
+     * @param Request  $request
      * @param Response $response
      *
      * @return void
      */
-    private function serveStatic(Request $request, Response $response)
+    private function serveStatic($webRootDirectory, Request $request, Response $response)
     {
-        $body = file_get_contents($this->webRoot . '/' . $request->getPath());
+        $body = file_get_contents($webRootDirectory . $request->getPath());
         $response->writeHead(['Content-Type' => $request->getHeaders()['Accept'][0]]);
         $response->end(
             $body
@@ -174,48 +151,88 @@ class Server
     }
 
     /**
-     * Checks Adapters and runs the server with the app
+     * Initialise ReactPHP setup
      *
-     * @param \Slim\App $app Slim application instance
+     * @return array[
+     *  \React\EventLoop\LibEventLoop,
+     *  \React\Socket\Server,
+     *  \React\Http\Server
+     * ]
+     */
+    private function initialiseReactPHP()
+    {
+        return [
+            $loop = \React\EventLoop\Factory::create(),
+            $socketServer = new \React\Socket\Server($loop),
+            new \React\Http\Server($socketServer, $loop),
+        ];
+    }
+
+    /**
+     * Run simple server to serve API's only
+     *
+     * @param App $app
      *
      * @return void
      */
-    public function run(\Slim\App $app)
+    public function runAsApiServer(App $app)
     {
-        // We make the setup of ReactPHP.
-        $loop   = \React\EventLoop\Factory::create();
-        $socket = new \React\Socket\Server($loop);
-        $http   = new \React\Http\Server($socket, $loop);
+        list($loop, $socketServer, $httpServer) = $this->initialiseReactPHP();
 
-        if ($this->webRoot !== null) {
-            // Link callback to the Request event.
-            $http->on('request', function (Request $request, Response $response) use ($app) {
-                // POSSIBLY ADD MORE ITEMS?
-                if (preg_match('/\.(?:css|png|jpg|jpeg|gif)$/', $request->getPath())) {
-                    $this->serveStatic($request, $response);
-                } else {
-                    $this->bootApp($app, $request, $response);
-                }
-            });
-            echo sprintf(
-                "Server running at http://%s:%d\nAssets are being served from %s\n",
-                $this->host,
-                $this->port,
-                $this->webRoot
-            );
-        } else {
-            $http->on('request', function (Request $request, Response $response) use ($app) {
-                $this->bootApp($app, $request, $response);
-            });
-            echo sprintf(
-                "Server running at http://%s:%s\n",
-                $this->host,
-                $this->port
-            );
-        }
+        $httpServer->on('request', function (Request $request, Response $response) use ($app) {
+            $this->bootApp($app, $request, $response);
+        });
 
-        $socket->listen($this->port, $this->host);
+        echo sprintf(
+            "Server running at http://%s:%s\n",
+            $this->host,
+            $this->port
+        );
+
+        $socketServer->listen($this->port, $this->host);
         $loop->run();
     }
 
+    /**
+     * Run a full web server and serve web assets as well as HTML
+     *
+     * @param App    $app
+     * @param string $webRootDirectory
+     *
+     * @return void
+     */
+    public function runAsWebServer(App $app, $webRootDirectory)
+    {
+        if (
+            empty($webRootDirectory) === true
+            && is_dir($webRootDirectory) === false
+        ) {
+            throw new \InvalidArgumentException($webRootDirectory);
+        }
+
+        list(
+            $loop,
+            $socketServer,
+            $httpServer
+            ) = $this->initialiseReactPHP();
+
+        $httpServer->on('request', function (Request $request, Response $response) use ($app, $webRootDirectory) {
+            // POSSIBLY ADD MORE ITEMS?
+            if (preg_match('/\.(?:css|png|jpg|jpeg|gif)$/', $request->getPath())) {
+                $this->serveStatic($webRootDirectory, $request, $response);
+            } else {
+                $this->bootApp($app, $request, $response);
+            }
+        });
+
+        echo sprintf(
+            "Server running at http://%s:%d\nAssets are being served from %s\n",
+            $this->host,
+            $this->port,
+            $webRootDirectory
+        );
+
+        $socketServer->listen($this->port, $this->host);
+        $loop->run();
+    }
 }
