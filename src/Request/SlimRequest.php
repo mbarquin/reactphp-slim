@@ -109,9 +109,9 @@ class SlimRequest implements RequestInterface
      *
      * @param SlimPHPRequest $slRequest Slim request object
      *
-     * @return bool
+     * @return string
      */
-    static public function checkPartialUpload(SlimPHPRequest $slRequest) :bool
+    static public function checkPartialUpload(SlimPHPRequest $slRequest) :string
     {
         if($slRequest->hasHeader('Content-Type') === true) {
             $contentType = $slRequest->getHeader('Content-Type');
@@ -123,7 +123,7 @@ class SlimRequest implements RequestInterface
                 return static::FIXEDBOUNDARY.substr($contentType[0], $posBoundary);
             }
         }
-        return false;
+        return '';
     }
 
     /**

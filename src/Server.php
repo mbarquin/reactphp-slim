@@ -110,7 +110,7 @@ class Server
 
                 $slResponse = SlimResponse::createResponse();
 
-                if($boundary !== false) {
+                if($boundary !== '') {
                     if(isset($this->partials[$boundary]) === false) {
                         $this->partials[$boundary]['boundary'] = $boundary;
                     }
