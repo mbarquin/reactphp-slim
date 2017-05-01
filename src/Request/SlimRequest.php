@@ -150,18 +150,18 @@ class SlimRequest implements RequestInterface
      * Writes data into partial uploads array
      *
      * @param array  $filePartialsInfo Data with current uploaded files
-     * @param string $name             HTML Input name
-     * @param string $filename         Original file name
-     * @param string $contentType      File content type defined by browser
+     * @param array $name             HTML Input name
+     * @param array $filename         Original file name
+     * @param array $contentType      File content type defined by browser
      * @param string $temp_file        Temp file path and name
      *
      * @return void
      */
     static public function writeFilesArray(
         array  &$filePartialsInfo,
-        string $name,
-        string $filename,
-        string $contentType,
+        array  $name,
+        array  $filename,
+        array  $contentType,
         string $temp_file
     ) {
         $index = $name[1];
