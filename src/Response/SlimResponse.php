@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Response adapter class file.
  * It performs the setup of a reactPHP response and finishes the communication
@@ -18,6 +19,9 @@
  */
 namespace mbarquin\reactSlim\Response;
 
+use React\Http\Response as ReactResponse;
+use Slim\Http\Response as SlimPHPResponse;
+
 /**
  * Response adapter class
  * It performs the setup of a reactPHP response and finishes the communication
@@ -25,17 +29,20 @@ namespace mbarquin\reactSlim\Response;
 class SlimResponse implements ResponseInterface
 {
     /**
-     * It performs the setup of a reactPHP response from a SlimpPHP response
+     * It performs the setup of a reactPHP response from a SlimPHP response
      * object and finishes the communication
      *
-     * @param \React\Http\Response $reactResp    ReactPHP native response object
-     * @param \Slim\Http\Response  $slimResponse SlimPHP native response object
-     * @param boolean              $endRequest   If true, response flush will be finished
+     * @param ReactResponse    $reactResp    ReactPHP native response object
+     * @param SlimPHPResponse  $slimResponse SlimPHP native response object
+     * @param bool             $endRequest   If true, response flush will be finished
      *
      * @return void
      */
-    static function setReactResponse(\React\Http\Response $reactResp, \Slim\Http\Response $slimResponse, $endRequest = false)
-    {
+    static function setReactResponse(
+        ReactResponse $reactResp,
+        SlimPHPResponse $slimResponse,
+        bool $endRequest = false
+    ) {
         $headers = static::reduceHeaders($slimResponse->getHeaders());
         $reactResp->writeHead($slimResponse->getStatusCode(), $headers);
 
@@ -53,7 +60,7 @@ class SlimResponse implements ResponseInterface
      *
      * @return array Ready 4 reactPHP array
      */
-    static public function reduceHeaders($headersArray)
+    static public function reduceHeaders(array $headersArray) :array
     {
         $auxArray = [];
         foreach ($headersArray as $name => $value) {
@@ -70,10 +77,10 @@ class SlimResponse implements ResponseInterface
     /**
      * Returns a new Slim response object instance
      *
-     * @return \Slim\Http\Response
+     * @return SlimPHPResponse
      */
-    static public function createResponse()
+    static public function createResponse() :SlimPHPResponse
     {
-        return new \Slim\Http\Response();
+        return new SlimPHPResponse();
     }
 }
