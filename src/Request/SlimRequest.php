@@ -87,7 +87,7 @@ class SlimRequest implements RequestInterface
             $host[0],
             (int) $host[1],
             $request->getPath(),
-            $request->getQuery()
+            http_build_query($request->getQuery())
         );
 
         $serverParams                    = $_SERVER;
