@@ -4,3 +4,4 @@
 /src/vendor/**
 /build/phpUnit/**
 !.gitignore
+.idea
