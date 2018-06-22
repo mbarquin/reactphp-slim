@@ -8,13 +8,13 @@ This library is created in order to use reactPHP as a HTTP server for Slim frame
 
 Data, cookies and file uploads transmission between react and Slim objects. You can access through slim native functions to uploaded files, data and cookies.
 
-##Installation
+## Installation
 You can install the component in the following ways:
 
 * Use the official Github repository (https://github.com/mbarquin/reactphp-slim.git)
 * Use composer : composer require mbarquin/reactphp-slim --dev
 
-##Usage
+## Usage
 After the composer autoload requirement a Slim\App should be instanced and prepared as usual. Slim\App can be bootstrapped and all dependencies can be injected as you like, after that, a reactphp-slim server should be instanced and call the run method in it, using slim\App as parameter. The reactphp-slim server will act as intermediary and will launch the slim application through the ``process`` method when requested, this method avoids the usual request and response bootstrap made by Slim.
 
 When uploading files, move_uploaded_files() probably won't work, use native object methods to move the file.
